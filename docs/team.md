@@ -12,5 +12,5 @@ title:  Team
 ## USER 2
 ***UCI Net ID***: tannvib
 
-## USER 3
-***UCI Net ID***: ucinetid3
+## Jason Wong
+***UCI Net ID***: jasonhw3
