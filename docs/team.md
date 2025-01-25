@@ -9,7 +9,7 @@ title:  Team
 ## Ethan Sanghyek Oh
 ***UCI Net ID***: ethanso
 
-## USER 2
+## Tannvi Banerjee
 ***UCI Net ID***: tannvib
 
 ## Jason Wong
