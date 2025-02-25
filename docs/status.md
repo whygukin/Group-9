@@ -55,7 +55,11 @@ Some of these paramters were created by the person who made the base PPO algorit
 
 ## Evaluation
 
+The results of the PPO algorithm is limited to 1500000 timesteps and the environment and the results may not reflect actual poker gameplay.
+[INSERT GRAPH?]
+The results of the graph that was generated from the performance of the agent using the PPO algorithm can be seen above. While the graph is hard to read, there is a clear trend in performance in average episodic return being higher as more iterations are performed while playing Texas hold em. The return seems to be steadily increasing (the reward / # of chips average gained per episode vs iteration). At around 30 iterations to 130 iterations, there seems to be some stagnation in terms of episodic reward growth. A possibility for that is due to the AI agent finding difficulty in trying to find other optimal strategies besides folding, thus leading to a -50 (which is the initial amount bet) and instantly folding. To combat this, we decided to add a way for the agent to explore a little bit to find other optimal strategies besides folding. After the stagnation in the initial episodic returns, there seems to be another gain all the way to touching 400 chips in one episode. Thus showing potential growth from the AI agent itself.
 
+Another metric that was analyzed closely was the average actor loss. In order for the algorithm to be “stable”, we want the “surrogate loss function” to stabilize and or having a small error. This shows that the algorithm is likely to be converging which can be shown in the graph above. Stablizing at around -0.2 actor loss then exploring new strategies caused the AI agent to stabilize at a new -0.10 range of actor loss. This means that the PPO algorithm is likely to be improving over the iterations, while making small incremental changes to its policy.
 
 ## Remaining Goals and Challenges
 
