@@ -1,3 +1,6 @@
+#CITATION: CFR Algorithm from Google DeepMind's OpenSpiel, with parameters and gamedef modified for Texas Hold'em
+
+
 import pickle
 import sys
 from absl import app
