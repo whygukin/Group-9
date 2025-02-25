@@ -53,6 +53,26 @@ The algorithm itself ran with these parameters:
 
 Some of these paramters were created by the person who made the base PPO algorithm (which was modified later). The 4800 max timesteps per batch, 1600 max timesteps per episode were from the original code. Clipping, gamma, learning rate, entropy were all changed afterwards by playing around with the results of the algorithm.
 
+Another algorithm we looked at was Neural Fictitious Self-Play, using DQN as the inner-RL algorithm. As Johannes Heinrich and David Silver describes it in their paper "Deep Reinforcement Learning from Self-Play in Imperfect-Information Games", "NFSP combines FSP with neural network function approximation...  all players of
+the game are controlled by separate NFSP agents that learn from simultaneous play against each other, i.e. self-play. An NFSP agent interacts with its fellow agents and memorizes its experience of game transitions and its own best response behaviour in two memories," and "treats these memories as two distinct datasets suitable for deep reinforcement learning and supervised classification respectively." (Heinrich and Silver) The agent trains a neural network to predict action values using DQN, resulting in a network that represents the agent's approximate best response strategy, which selects a random action with probability and otherwise chooses the action that maximizes the predicted action values. 
+
+The agents were configured to have the following parameters: "hidden_layers_sizes": [256, 256],
+        "reservoir_buffer_capacity": int(2e6),
+        "anticipatory_param": 0.1,
+        "batch_size": 256,
+        "rl_learning_rate": 0.001,
+        "sl_learning_rate": 0.001,
+        "min_buffer_size_to_learn": 10000,
+        "learn_every": 64,
+        "optimizer_str": "adam",
+
+        # parameters for DQN
+        "replay_buffer_capacity": int(2e6),
+        "epsilon_start": 0.06,
+        "epsilon_end": 0.001,
+and these were all given to the python implementation of the NFSP algorithm that OpenSpiel has available. 
+ 
+
 ## Evaluation
 
 The results of the PPO algorithm is limited to 1500000 timesteps and the environment and the results may not reflect actual poker gameplay.
@@ -94,5 +114,8 @@ https://www.gymlibrary.dev/api/wrappers/ - help with using the algorithm
 
 Entropy in PPO algorithm:
 https://medium.com/aureliantactics/ppo-hyperparameters-and-ranges-6fc2d29bccbe
+
+Deep Reinforcement Learning from Self-Play in Imperfect-Information Games (Johannes Heinrich and David Silver)
+https://arxiv.org/pdf/1603.01121
 
 AI (ChatGPT) was used to help make changes in the PPO algorithm (in the codebase above), 1) helping change the PPO algorithm handle continuous to discrete inputs/outputs. 2) Alter it so that it is able to add some sort of exploration within the PPO algorithm using entropy.
