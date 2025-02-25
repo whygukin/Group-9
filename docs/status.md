@@ -10,7 +10,7 @@ Our inital proposal of the project was tailored to blackjack and using DQN to tr
 Our ultimate goal in this first inital proposal was to get a feel for the different algorithms and make sure they overall work. By work, I mean they are able to play poker and become somewhat successful at it.
 
 ## Approach
-One of the aforementioned approach we are taking to tackle the project is by using the PPO (Proximal Policy Optimization) algorithm created and developed by OpenAI. A variation of the actor-critic model, which helps the agent make better decisions based on the critic neural-network which influences the actor (which decisions to make) or vice versa. The PPO algorithm also aims to reduce the surrogate loss function found in the policy in order to maxmize the rewards from the user. PPO has a lost function that looks like this:
+One of the aforementioned approaches we are taking to tackle the project is by using the PPO (Proximal Policy Optimization) algorithm created and developed by OpenAI. A variation of the actor-critic model, which helps the agent make better decisions based on the critic neural-network which influences the actor (which decisions to make) or vice versa. The PPO algorithm also aims to reduce the surrogate loss function found in the policy in order to maxmize the rewards from the user. PPO has a lost function that looks like this:
 
 $$
 L(s,a, \theta_k, \theta) = \min \left( \frac{\pi_{\theta}(a|s)}{\pi_{\theta_k}(a|s)} A^{\pi_{\theta_k}}(s,a), \ g(\epsilon, A^{\pi_{\theta_k}}(s,a)) \right),
@@ -30,8 +30,31 @@ Basically finding the ratio of the policies multiplied by their advantage to see
 
 This algorithm works well in Poker Reinforcement Learning because of its slow updating policies making it a stable algorithm. But also, it is capable of learning in partially observable environments.
 
+The PPO algorithm was paired with the open-spiel environment that our TA recommended us for playing card games. The open-spiel environment also developed in part with google deepmind, contains universal poker which is a poker-like environment with adjustable parameters to reflect different variations of poker. For the PPO algorithm, we set the configurations as follows (similar to Texas Hold'em):
+
+- Each player starts with 2000 chips
+- 5 players total (1 as the designated agent to learn on PPO, 4 as complete random action agents)
+- Each player inital bets are 50 chips
+- 52 total cards in the deck (all 4 suits, 13 cards in each suit)
+- 3 flipped cards in the beginning, 1 more each after. Maxes at 5. (as players continue to bet)
+- Maxmium number total betting rounds cap at 4.
+
+To learn more about how to play poker: https://bicyclecards.com/how-to-play/texas-holdem-poker.
+
+The algorithm itself ran with these parameters:
+
+- 1500000 timesteps
+- 1600 max timesteps per episode
+- 4800 timesteps per batch
+- entropy coeffecient at 0.05
+- clipping at 0.2
+- gamma at 0.99
+- learning rate at 0.001
+
+Some of these paramters were created by the person who made the base PPO algorithm (which was modified later). The 4800 max timesteps per batch, 1600 max timesteps per episode were from the original code. Clipping, gamma, learning rate, entropy were all changed afterwards by playing around with the results of the algorithm.
 
 ## Evaluation
+
 
 
 ## Remaining Goals and Challenges
@@ -64,5 +87,8 @@ https://github.com/google-deepmind/open_spiel
 
 Helped with integrating open-spiel environment with gym environment to use with the PPO algorithm
 https://www.gymlibrary.dev/api/wrappers/ - help with using the algorithm
+
+Entropy in PPO algorithm:
+https://medium.com/aureliantactics/ppo-hyperparameters-and-ranges-6fc2d29bccbe
 
 AI (ChatGPT) was used to help make changes in the PPO algorithm (in the codebase above), 1) helping change the PPO algorithm handle continuous to discrete inputs/outputs. 2) Alter it so that it is able to add some sort of exploration within the PPO algorithm using entropy.
