@@ -1,1 +1,1 @@
-# Poker RL Group
+# Poker RL
