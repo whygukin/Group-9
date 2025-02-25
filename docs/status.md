@@ -10,7 +10,7 @@ Our inital proposal of the project was tailored to blackjack and using DQN to tr
 Our ultimate goal in this first inital proposal was to get a feel for the different algorithms and make sure they overall work. By work, I mean they are able to play poker and become somewhat successful at it.
 
 ## Approach
-The approach we are taking to tackle the project is by using the algorithms mentioned: PPO and CFR. [INPUT WHAT CFR IS HERE]. On the other hand PPO (Policy Promixity Optimization) algorithm aims to reduce the surrogate loss function found in the policy in order to maxmize the rewards from the user. PPO was developed and researched at OpenAI and in their documentation, PPO has a lost function that looks like this:
+One of the aforementioned approach we are taking to tackle the project is by using the PPO (Proximal Policy Optimization) algorithm created and developed by OpenAI. A variation of the actor-critic model, which helps the agent make better decisions based on the critic neural-network which influences the actor (which decisions to make) or vice versa. The PPO algorithm also aims to reduce the surrogate loss function found in the policy in order to maxmize the rewards from the user. PPO has a lost function that looks like this:
 
 $$
 L(s,a, \theta_k, \theta) = \min \left( \frac{\pi_{\theta}(a|s)}{\pi_{\theta_k}(a|s)} A^{\pi_{\theta_k}}(s,a), \ g(\epsilon, A^{\pi_{\theta_k}}(s,a)) \right),
@@ -25,6 +25,11 @@ g(\epsilon, A) =
 (1-\epsilon)A & A < 0.
 \end{cases}
 $$
+
+Basically finding the ratio of the policies multiplied by their advantage to see how it performs. Then, the algorithm compares it with the lower bound / upper bound changes the algorithm can perform. This makes it so the PPO algorithm cannot have a loss that is bigger / less than the desired amount (usually a small amount). This makes updating the policy incrementally small potentially taking longer to converge and or find a solution. However, it makes the algorithm much more stable in the long run.
+
+This algorithm works well in Poker Reinforcement Learning because of its slow updating policies making it a stable algorithm. But also, it is capable of learning in partially observable environments.
+
 
 ## Evaluation
 
@@ -60,4 +65,4 @@ https://github.com/google-deepmind/open_spiel
 Helped with integrating open-spiel environment with gym environment to use with the PPO algorithm
 https://www.gymlibrary.dev/api/wrappers/ - help with using the algorithm
 
-AI (ChatGPT) was used to help make some changes in the PPO algorithm (in the codebase above), such as helping change the PPO algorithm handle continuous to discrete inputs/outputs.
+AI (ChatGPT) was used to help make changes in the PPO algorithm (in the codebase above), 1) helping change the PPO algorithm handle continuous to discrete inputs/outputs. 2) Alter it so that it is able to add some sort of exploration within the PPO algorithm using entropy.
