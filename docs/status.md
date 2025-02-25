@@ -57,6 +57,7 @@ Another algorithm we looked at was Neural Fictitious Self-Play, using DQN as the
 the game are controlled by separate NFSP agents that learn from simultaneous play against each other, i.e. self-play. An NFSP agent interacts with its fellow agents and memorizes its experience of game transitions and its own best response behaviour in two memories," and "treats these memories as two distinct datasets suitable for deep reinforcement learning and supervised classification respectively." (Heinrich and Silver) The agent trains a neural network to predict action values using DQN, resulting in a network that represents the agent's approximate best response strategy, which selects a random action with probability and otherwise chooses the action that maximizes the predicted action values. 
 
 The agents were configured to have the following parameters: 
+        # parameters for NFSP
         "hidden_layers_sizes": [256, 256],
         "reservoir_buffer_capacity": int(2e6),
         "anticipatory_param": 0.1,
