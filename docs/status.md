@@ -83,7 +83,7 @@ exploitability(game, solver.average_policy()) measures how close (in terms of ex
 
 Specifically, the CFR algorithm can be defined by the following equation:
 
-![ImageTest](docs/cfr_algo.png)
+![ImageTest](https://github.com/whygukin/Group-9/blob/main/docs/cfr%20algo.png)
 
 For each action a∈A(I), it defines the (instantaneous) counterfactual regret at iteration t by looking at all histories h belonging to information set I, weighting each history by the probability that the other players’ actions led to h, and comparing the utility if you force action a in I versus the utility under the current strategy.
 
