@@ -3,10 +3,8 @@ layout: default
 title: Status
 ---
 
-https://youtu.be/QDUY3KO2Lvg
-
+Project Progress Report Video:
 [![Alt text](https://img.youtube.com/vi/QDUY3KO2Lvg/0.jpg)](https://youtu.be/QDUY3KO2Lvg)
-
 
 
 ## Summary of the Project (UPDATED)
