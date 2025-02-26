@@ -5,7 +5,7 @@ title: Status
 
 https://youtu.be/QDUY3KO2Lvg
 
-[![Alt text](https://img.youtube.com/vi/{video-id}/0.jpg)](https://youtu.be/QDUY3KO2Lvg)
+[![Alt text](https://img.youtube.com/vi/{QDUY3KO2Lvg}/0.jpg)](https://youtu.be/QDUY3KO2Lvg)
 
 
 
