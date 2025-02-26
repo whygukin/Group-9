@@ -89,7 +89,7 @@ For each action a∈A(I), it defines the (instantaneous) counterfactual regret a
 
 It accumulates this regret across iterations, and resets to 0 if it ever becomes negative.
 
-![ImageTest](docs/cfralgo2.png)
+![ImageTest](cfralgo2.png)
 
 Finally, it uses these positive regrets to define the policy at iteration t+1. For each information set I and action a∈A(I)a.
 
