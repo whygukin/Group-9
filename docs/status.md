@@ -93,7 +93,7 @@ It accumulates this regret across iterations, and resets to 0 if it ever becomes
 
 Finally, it uses these positive regrets to define the policy at iteration t+1. For each information set I and action a∈A(I)a.
 
-![](docs/cfralgo3.png)
+![ImageTest](/docs/cfralgo3.png)
 
 Thus, the probability of choosing action a is proportional to the accumulated positive regret for a.
 
