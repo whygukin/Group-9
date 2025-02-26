@@ -53,6 +53,51 @@ The algorithm itself ran with these parameters:
 
 Some of these parameters were created by the person who made the base PPO algorithm (which was modified later). The 4800 max timesteps per batch, 1600 max timesteps per episode were from the original code. Clipping, gamma, learning rate, entropy were all changed afterwards by playing around with the results of the algorithm.
 
+Another algorithm we evaluated was the CFR algorithm. Our code evaluates a poker game solver using different variants of Counterfactual Regret Minimization (CFR) algorithms. It defines a custom limited hold'em poker game with specific parameters including 2 players, 1 betting round, defined blinds and raise sizes, and card distributions. The program allows users to choose between three CFR solver variants: standard CFR, CFR+ (an improved version), or CFR-BR (with best response). During execution, the solver runs through half the specified iterations, evaluating and printing the exploitability after each one to track how close the strategy is to optimal. The trained solver is then saved to a pickle file, loaded back, and its exploitability is verified to ensure proper persistence. The code then continues training for the remaining iterations using the loaded solver, printing both the tabular policy length and ongoing exploitability measurements. This implementation uses OpenSpiel framework to approximate a Nash equilibrium strategy for the defined poker game, where neither player could improve their expected value by changing their strategy.
+
+
+Our game is defined in the following way:
+CUSTOM_LIMIT_HOLDEM_ACPC_GAMEDEF = """\
+GAMEDEF
+limit
+numPlayers = 2
+numRounds = 1
+blind = 2 4
+raiseSize = 4 4 8
+firstPlayer = 1
+maxRaises = 2 2 2
+numSuits = 2
+numRanks = 5
+numHoleCards = 1
+numBoardCards = 0 2 1
+stack = 20
+END GAMEDEF
+"""
+
+
+This is a small, custom, 2-player “limit hold’em”-style game. It is a simplified version of the Texas Hold’em game (which uses 2 hole cards, 5 community cards in multiple rounds, etc.). numHoleCards = 1 means each player gets just 1 hole card, and numBoardCards = 0 2 1 indicates the dealing of 3 total board cards in stages. The Universal Poker engine in OpenSpiel can parse ACPC game definitions, so any game configuration we provide in ACPC format (including Texas Hold’em) can be loaded here.
+
+Specifically, we compare a tradtional CFR algorithm with a CFR+ algorithm (an improved version that tends to converge faster), and CFR-BR algorithm. All of these are iterative algorithms for approximating a Nash equilibrium in multi-player zero-sum games. Each call to evaluate_and_update_policy() performs one iteration of the CFR algorithm.
+exploitability(game, solver.average_policy()) measures how close (in terms of expected payoff) the current average policy is to a true Nash equilibrium. The lower the exploitability, the better.
+
+
+Specifically, the CFR algorithm can be defined by the following equation:
+
+![](docs/cfr_algo.png)
+
+For each action a∈A(I), it defines the (instantaneous) counterfactual regret at iteration t by looking at all histories h belonging to information set I, weighting each history by the probability that the other players’ actions led to h, and comparing the utility if you force action a in I versus the utility under the current strategy.
+
+It accumulates this regret across iterations, and resets to 0 if it ever becomes negative.
+
+![](docs/cfralgo2.png)
+
+Finally, it uses these positive regrets to define the policy at iteration t+1. For each information set I and action a∈A(I)a.
+
+![](docs/cfralgo3.png)
+
+Thus, the probability of choosing action a is proportional to the accumulated positive regret for a.
+
+
 Another algorithm we explored was Neural Fictitious Self-Play, using DQN as the inner-RL algorithm. As Johannes Heinrich and David Silver describes it in their paper "Deep Reinforcement Learning from Self-Play in Imperfect-Information Games", "NFSP combines FSP with neural network function approximation...  all players of the game are controlled by separate NFSP agents that learn from simultaneous play against each other, i.e. self-play. An NFSP agent interacts with its fellow agents and memorizes its experience of game transitions and its own best response behaviour in two memories," and "treats these memories as two distinct datasets suitable for deep reinforcement learning and supervised classification respectively." (Heinrich and Silver) The agent trains a neural network to predict action values using DQN, resulting in a network that represents the agent's approximate best response strategy, which selects a random action with probability and otherwise chooses the action that maximizes the predicted action values. 
 
 The agents were configured to have the following parameters: 
@@ -85,6 +130,34 @@ The results of the graph that was generated from the performance of the agent us
 
 Another metric that was analyzed closely was the average actor loss. In order for the algorithm to be “stable”, we want the “surrogate loss function” to stabilize and or having a small error. This shows that the algorithm is likely to be converging which can be shown in the graph above. Stablizing at around -0.2 actor loss then exploring new strategies caused the AI agent to stabilize at a new -0.10 range of actor loss. This means that the PPO algorithm is likely to be improving over the iterations, while making small incremental changes to its policy. 
 
+When it came to evaluating the 3 variants of CFR algorithms, we found the following:
+CFR (Counterfactual Regret Minimization):
+- Basic Algorithm: Iteratively computes counterfactual regrets and updates strategies via regret matching.
+- No “Plus” Modifications: Standard CFR directly uses cumulative regrets (positive and negative) to form the next iteration’s policy.
+
+CFR+:
+- Regret-Matching: Applies a “positive part” operation to regrets (negative regrets are reset to 0).
+- Linear Averaging: Uses linear weighting of iterates when forming the average strategy, to improve empirical convergence.
+- Faster Convergence: CFR+ converges faster and more stably than vanilla CFR in games like poker.
+
+CFR-BR:
+- Iterative Best Responses: At each iteration, for each player p, it computes a best response against the current policy of the other players, then updates player p’s regrets/policy accordingly.
+- Policy Overrides: policy_overrides_ used to temporarily force other players to follow their best-response policies (except for the player currently updating).
+- Not the Same as “Alternating Updates”: Unlike standard CFR or CFR+ where all players update regrets each iteration (or in round-robin fashion), CFR-BR explicitly uses best response computations for the opponents.
+
+The graphs plotting exploitability for the three algorithms looked like the following:
+
+![](docs/cfr-graph.png)
+
+
+![](docs/cfrplus_graph.png)
+
+
+![](docs/cfr-br_graph.png)
+
+These results were generated by running 200 iterations of each algorithm (CFR, CFR+, and CFR-BR). They use external sampling and regrets are accumulated over iterations without discount. Each information set (player viewpoint) keeps track of regrets for each action, updated every iteration through tabular regret matching. Looking at the normal CFR algorithm, it starts with exploitability around 2.5 and declines rapidly in the first few iterations. By iteration ~25, it is already under 0.5 exploitability. It continues to drop and eventually levels out around 0.016 by iteration 200. The curve shows a characteristic fast initial drop followed by a more gradual improvement. Looking at CFR+, it also starts at around 2.5 exploitability and quickly falls to below 0.5 within the first 25 iterations. By iteration 200, exploitability is approximately 0.003, which is significantly lower than the final CFR result. CFR+ is known to converge faster (and typically to a lower exploitability) in practice because of its modified regret and strategy update rules (often referred to as “regret matching+”), which tend to handle negative regrets and strategy bounding more effectively. CFR-BR shows a similar steep drop initially but levels off closer to 0.055 at iteration 200. It does not converge as quickly or as deeply as CFR+ in terms of exploitability. Some versions of “CFR-BR” alternate between re-solving with CFR and explicitly computing best responses for one or more players, which can cause bigger initial drops but may stabilize at a higher exploitability. The key reason CFR+ outperforms vanilla CFR is because of the way it modifies regret accumulation and strategy updates. Through regret matching+, it bounds negative regrets and maintains a smoothed  update to the strategy.
+
+
 To evaluate our agent trained by NFSP, we looked at its winrate against a random bot and the average return it had every 10000 episodes. 
 
 ## Remaining Goals and Challenges
@@ -111,7 +184,7 @@ https://github.com/ericyangyu/PPO-for-Beginners/blob/master/ppo.py  (repository 
 PPO algorithm such as all the math from Open AI (developers themselves)
 https://spinningup.openai.com/en/latest/algorithms/ppo.html 
 
-Open-Spiel Environment (Specifically universal_poker environment).
+Open-Spiel Environment (Specifically universal_poker environment and the 3 variants of the CFR algorithm).
 https://github.com/google-deepmind/open_spiel 
 
 Helped with integrating open-spiel environment with gym environment to use with the PPO algorithm
