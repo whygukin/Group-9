@@ -211,7 +211,7 @@ https://blog.marketmuse.com/glossary/adaptive-moment-estimation-adam-definition/
 ## AI Tool Usage
 AI (ChatGPT) was used to help make changes in the PPO algorithm (in the codebase above), 1) helping change the PPO algorithm handle continuous to discrete inputs/outputs. 2) Alter it so that it is able to add some sort of exploration within the PPO algorithm using entropy.
 
-AI was used in the creation of a wrapper to wrap around an NFSP agent in order to procure its average policy to use in Open Spiel. These would be the classes NFSPPolicy(policy.Policy) in the code. 
+AI was used in the creation of a wrapper to wrap around an NFSP agent in order to procure its average policy to use in Open Spiel. These would be the classes NFSPPolicy(policy.Policy) in the evaluation code where NFSP is being used. It was also used to create a wrapper for PPO models loaded using stable-baselines, which would be the class PPOPolicy in the evaluation code where PPO is being used. 
 
 A custom environment wrapper was needed to load the game with the correct parameters that we customized. This is the class CustomPokerEnv(rl_environment.Environment in the code.
 
