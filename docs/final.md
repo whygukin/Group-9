@@ -7,7 +7,7 @@ title: Final
 [![Alt text](https://img.youtube.com/vi/aU9w3WtiqhE/0.jpg)](https://youtu.be/aU9w3WtiqhE)
 
 
-## Summary of the Project (UPDATED)
+## Project Summary
 
 Our initial proposal for the project was to make an agent that can play blackjack by using a DQN algorithm. However, we decided to change to making an agent that can play poker instead. Since poker is a bigger game, there are more variables to take into consideration such as betting amounts, multi-agent, and imperfect observations. All of these variables drastically change how to approach making an agent for poker games like Texas hold’em. 
 
