@@ -3,7 +3,8 @@ layout: default
 title: Final
 ---
 
-[![Alt text](https://img.youtube.com/vi/QDUY3KO2Lvg/0.jpg)](https://youtu.be/QDUY3KO2Lvg)
+## Video Summary
+[![Alt text](https://img.youtube.com/vi/aU9w3WtiqhE/0.jpg)](https://youtu.be/aU9w3WtiqhE)
 
 
 ## Summary of the Project (UPDATED)
