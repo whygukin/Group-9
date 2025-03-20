@@ -113,7 +113,7 @@ Thus, the probability of choosing action a is proportional to the accumulated po
 
 Another algorithm we explored was Neural Fictitious Self-Play, using DQN as the inner-RL algorithm. As Johannes Heinrich and David Silver describes it in their paper "Deep Reinforcement Learning from Self-Play in Imperfect-Information Games", "NFSP combines FSP with neural network function approximation...  all players of the game are controlled by separate NFSP agents that learn from simultaneous play against each other, i.e. self-play. An NFSP agent interacts with its fellow agents and memorizes its experience of game transitions and its own best response behaviour in two memories," and "treats these memories as two distinct datasets suitable for deep reinforcement learning and supervised classification respectively." (Heinrich and Silver) The agent trains a neural network to predict action values using DQN, resulting in a network that represents the agent's average strategy, which selects a random action with probability and otherwise chooses the action that maximizes the predicted action values. 
 
-After testing and tuning different hyperparameters, NFSP agents were configured to have the following: 
+After testing and tuning different hyperparameters, our NFSP agents were configured to have the following: 
 ```
         agent_configs = {
                 "hidden_layers_sizes": [256, 256],        
@@ -225,8 +225,10 @@ https://blog.marketmuse.com/glossary/adaptive-moment-estimation-adam-definition/
 ## AI Tool Usage
 AI (ChatGPT) was used to help make changes in the PPO algorithm (in the codebase above), 1) helping change the PPO algorithm handle continuous to discrete inputs/outputs. 2) Alter it so that it is able to add some sort of exploration within the PPO algorithm using entropy.
 
-Creation of a wrapper to wrap around an NFSP agent in order to procure its average policy to use in Open Spiel. These would be the classes NFSPPolicy(policy.Policy) and NFSPPolicyAdapter(policy.Policy) in the code. 
+AI was used in the creation of a wrapper to wrap around an NFSP agent in order to procure its average policy to use in Open Spiel. These would be the classes NFSPPolicy(policy.Policy) in the code. 
 
-A custom environment wrapper was needed to load the game with the correct parameters that we customized. This is the class CustomPokerEnv(rl_environment.Environment in the code.  
+A custom environment wrapper was needed to load the game with the correct parameters that we customized. This is the class CustomPokerEnv(rl_environment.Environment in the code.
+
+The function evaluate_against_random_bots found in the main.py of the nfsp folder was originally written by AI, with minor changes to be used in our environment. 
 
 
