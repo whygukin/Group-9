@@ -26,24 +26,44 @@ As mentioned above our goal was to implement PPO, NFSP, and CFR as potential age
 
 Our original approach was to implement PPO, NFSP, and CFR (and its variants) algorithms in a game of No-limit Texas Hold’em (NLTHE), but we realized that NLTHE was a very large game given our current memory and time constraints. So we landed on a definition of poker that is an abstraction of Limit Texas Hold’em (LTHE). We used Openspiel’s universal_poker game environment to train and evaluate our agents. The game is implemented so that we can use our own custom definitions of poker to train our agents. For this project, our custom game definition is as follows: 
 
-{'betting': 'limit', 'bettingAbstraction': 'fcpa', 'blind': '2 4', 'boardCards': '', 'firstPlayer': '1 1', 'handReaches': '', 'maxRaises': '2 2', 'numBoardCards': '0 2', 'numHoleCards': 1, 'numPlayers': 2, 'numRanks': 5, 'numRounds': 2, 'numSuits': 2, 'potSize': 0, 'raiseSize': '4 8', 'stack': '20 20'}
+```
+
+{'betting': 'limit',
+'bettingAbstraction': 'fcpa',
+'blind': '2 4',
+'boardCards': '',
+'firstPlayer': '1 1',
+'handReaches': '',
+'maxRaises': '2 2',
+'numBoardCards': '0 2',
+'numHoleCards': 1,
+'numPlayers': 2,
+'numRanks': 5,
+'numRounds': 2,
+'numSuits': 2,
+'potSize': 0,
+'raiseSize': '4 8',
+'stack': '20 20'}
+
+```
 
 Just to explain a few of the differences between normal Texas Hold’em and our game definitions: 
 
-Limit betting: limits the amount of bets a player can make, as opposed to no-limit, which allows a player to raise any amount of chips at any point in the game. 
+**Limit betting**: limits the amount of bets a player can make, as opposed to no-limit, which allows a player to raise any amount of chips at any point in the game. 
 
-FCPA abstraction: when training, we abstracted the game so that agents were limited to 5 actions: fold, call, raise the bet by the amount in the pot, and all-in.
+**FCPA abstraction**: when training, we abstracted the game so that agents were limited to 5 actions: fold, call, raise the bet by the amount in the pot, and all-in.
 
-2 players: also known as heads-up, this reduces the amount of information that is incomplete by a considerably large amount. 
-2 rounds of betting, 1 hole card & 2 board cards: traditionally, each player would get 2 hole cards, and there would be 4 rounds of betting with 5 total board cards revealed. To reduce the amount of information that is incomplete once again, we halve the number of hole cards a player has, and only have 2 community cards, so the goal of the game is to try to have the highest 3-card hand. 
+**2 players**: also known as heads-up, this reduces the amount of information that is incomplete by a considerably large amount. 
 
-5 ranks and 2 suits: in a normal deck of cards, there are 13 different ranks (2-10, jacks, queens, kings, and aces) and 4 suits (clubs, diamonds, hearts and spades); however, to simplify the game we lowered it to 5 ranks and 2 suits. 
+**2 rounds of betting, 1 hole card & 2 board cards**: traditionally, each player would get 2 hole cards, and there would be 4 rounds of betting with 5 total board cards revealed. To reduce the amount of information that is incomplete once again, we halve the number of hole cards a player has, and only have 2 community cards, so the goal of the game is to try to have the highest 3-card hand. 
+
+**5 ranks and 2 suits**: in a normal deck of cards, there are 13 different ranks (2-10, jacks, queens, kings, and aces) and 4 suits (clubs, diamonds, hearts and spades); however, to simplify the game we lowered it to 5 ranks and 2 suits. 
 
 The advantage of changing the game definition is that it allows us to run the algorithms in a reasonable amount of time, whereas even a classic game of No-Limit Texas Hold’Em would potentially take days or weeks to finish learning. This combined with the constant HPC3 limit usages and outages made it almost impossible to do it on the full game. So our only other reasonable approach was to alternate/change the game so that it is smaller and easier to run on given the short period of time we had.
 
-We used Open Spiel’s Python implementations of NFSP and CFR (and CFR+) to train our agents. We leveraged OpenAI’s Python implementation of PPO to train a third agent. Once they were done training, we saved the average policy of these agents and loaded them later when we wanted to evaluate their performance. 
+We used Open Spiel’s Python implementations of NFSP and CFR (and CFR+) to train our agents. We leveraged OpenAI’s implementation of PPO / stable_baselines3's PPO as the third agent. Once they were done training, we saved the average policy of these agents and loaded them later when we wanted to evaluate their performance. 
 
-One of the aforementioned approaches we are taking to tackle the project is by using the PPO algorithm created and developed by OpenAI. A variation of the actor-critic model, which helps the agent make better decisions based on the critic which influences the actor (which decisions to make) or vice versa. The PPO algorithm also aims to reduce the surrogate loss function found in the policy in order to maximize the rewards from the user. PPO has a lost function that looks like this:
+One of the approaches we are taking to tackle the project is by using the PPO algorithm created and developed by OpenAI. A variation of the actor-critic model, which helps the agent make better decisions based on the critic which influences the actor (which decisions to make) or vice versa. The PPO algorithm also aims to reduce the surrogate loss function found in the policy in order to maximize the rewards from the user. PPO has a lost function that looks like this:
 
 $$
 L(s,a, \theta_k, \theta) = \min \left( \frac{\pi_{\theta}(a|s)}{\pi_{\theta_k}(a|s)} A^{\pi_{\theta_k}}(s,a), \ g(\epsilon, A^{\pi_{\theta_k}}(s,a)) \right),
