@@ -141,9 +141,7 @@ When it came to evaluating the 3 variants of CFR algorithms, we found the follow
 
 
 
-
 ![ImageTest](cfrplus_graph.png)
-
 
 
 
@@ -163,8 +161,6 @@ Additionally, we wanted to try CFR+ (the most accurate/lowest exploitability CFR
 
 
 For the graph, we can observe that the CFR agent's average returns generally stay above zero, indicating an overall advantage over the random agent. The highest average return is 2.640 at iteration 177, and it generally stays around the 1.5 - 1.7 average return rate mark. We can observe that the CFR agent's win rate often hovers between 40% and 50%, showing a slight edge over the random agent. Its highest win rate is 0.514 (51.4%) which is around 20% greater than the average win rate for a medium level player which hovers around 20%. The frequent ups and downs across iterations reflect the inherent variability in the strategy’s adjustments based on policy updates over time. While a 50% win rate might not seem significant, in poker, especially a variant like Texas Hold’em, winning percentage (the fraction of individual hands or pots you win) is not the same as expected value (the long-term profit in chips or money). Even an optimal poker strategy can end up winning only about half of the individual hands against a random strategy—yet still earn a positive profit over time. CFR+ (like most strong poker bots) is focused on minimizing exploitability and maximizing expected return, not on winning the largest fraction of hands. Sometimes an optimal or near-optimal play will fold in marginal spots, resulting in a “lost” hand, but saving chips in the long run.This 50% statistic seemed consistent (and actually higher by around 3%) than most other implementations of CFR+ against poker agents in external research papers.
-
-
 
 
 
