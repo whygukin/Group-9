@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 
+import pyspiel
+
 from open_spiel.python import rl_environment
 from open_spiel.python.algorithms import nfsp
 from open_spiel.python.algorithms import random_agent
@@ -12,7 +14,13 @@ import gc
 import tensorflow.compat.v1 as tf
 tf.disable_eager_execution()  # Disable TF2 eager execution
 
-def evaluate_against_random_bots(env, trained_agents, num_episodes=1000):
+class CustomPokerEnv(rl_environment.Environment):
+    def __init__(self, params):
+        self._game = pyspiel.load_game("universal_poker", params)
+        super().__init__(self._game)
+
+
+def evaluate_against_random_bots(env, trained_agents, num_episodes=500):
     """Evaluates trained agents against random agents."""
     random_agents = [
         random_agent.RandomAgent(player_id=idx, num_actions=env.action_spec()["num_actions"])
@@ -59,138 +67,64 @@ def evaluate_against_random_bots(env, trained_agents, num_episodes=1000):
     
     return wins_as_player0 / num_episodes, wins_as_player1 / num_episodes
 
-def load_agents(session, env, save_dir, agent_configs):
-    """Load trained agents from disk."""
-    num_players = env.num_players
-    agents = []
-    for i in range(num_players):
-        agent = nfsp.NFSP(
-            player_id=i,
-            state_representation_size=env.observation_spec()["info_state"][0],
-            num_actions=env.action_spec()["num_actions"],
-            session=session,
-            **agent_configs
-        )
-        agent.restore(save_dir + f"/agent_{i}")
-        agents.append(agent)
-    return agents
+def save_agents(agents, save_dir, episode):
+    """Save trained agents to disk with episode number."""
+    episode_dir = os.path.join(save_dir, f"episode_{episode}")
+    os.makedirs(episode_dir, exist_ok=True)
+    for idx, agent in enumerate(agents):
+        agent.save(os.path.join(episode_dir, f"agent_{idx}"))
+    print(f"Agents saved to {episode_dir}")
 
-# def load_all_returns(save_dir, current_episode):
-    # """Load all saved returns and combine them with current returns."""
-    # all_returns = []
-    
-    # # Load saved returns from files
-    # for ep in range(10000, current_episode, 10000):
-    #     try:
-    #         saved_returns = np.load(f"{save_dir}/returns_{ep}.npy")
-    #         all_returns.extend(saved_returns)
-    #     except FileNotFoundError:
-    #         print(f"Warning: Could not find returns file for episode {ep}")
-    
-    # # Add current returns that haven't been saved yet
-    # all_returns.extend(returns)
-    
-    # return all_returns
+def write_to_log(save_dir, message, print_to_console=True):
+    log_file = os.path.join(save_dir, "training_log.txt")
+    with open(log_file, "a") as f:
+        f.write(message + "\n")
+    if print_to_console:
+        print(message)
 
-def plot_returns_from_files(save_dir, current_episode, returns, save_count, window_size=1000):
-    """Plot returns data from saved files without loading all data at once."""
-    plt.figure(figsize=(12, 5))
-    
-    # Initialize arrays for the moving average calculation
-    sum_p0 = np.zeros(window_size)
-    sum_p1 = np.zeros(window_size)
-    count = 0
-    
-    # Process each saved file
-    for ep in range(10000, current_episode + 1, 10000):
-        try:
-            # Load one file at a time
-            file_path = f"{save_dir}/returns_{ep}.npy"
-            
-            # Process the file in chunks to avoid memory issues
-            for chunk in np.load(file_path, mmap_mode='r'):  # Memory-mapped mode
-                # Update the moving average
-                returns_p0 = chunk[0]  # Player 0 return
-                returns_p1 = chunk[1]  # Player 1 return
-                
-                # Update the sums
-                sum_p0 = np.roll(sum_p0, -1)
-                sum_p1 = np.roll(sum_p1, -1)
-                sum_p0[-1] = returns_p0
-                sum_p1[-1] = returns_p1
-                
-                count += 1
-                
-                # Plot a point every 1000 episodes to avoid overcrowding
-                if count % 1000 == 0:
-                    plt.plot(count, np.mean(sum_p0), 'b.', alpha=0.5)
-                    plt.plot(count, np.mean(sum_p1), 'r.', alpha=0.5)
-                    
-        except FileNotFoundError:
-            print(f"Warning: Could not find returns file for episode {ep}")
-    
-    # Add current returns that haven't been saved yet
-    for r in returns:
-        sum_p0 = np.roll(sum_p0, -1)
-        sum_p1 = np.roll(sum_p1, -1)
-        sum_p0[-1] = r[0]
-        sum_p1[-1] = r[1]
-        count += 1
-        
-        if count % 1000 == 0:
-            plt.plot(count, np.mean(sum_p0), 'b.', alpha=0.5)
-            plt.plot(count, np.mean(sum_p1), 'r.', alpha=0.5)
-    
-    # Add smoothed lines
-    plt.plot([], [], 'b-', label='Player 0')
-    plt.plot([], [], 'r-', label='Player 1')
-    
-    plt.xlabel("Episodes")
-    plt.ylabel("Average Return (Moving Avg)")
-    plt.legend()
-    plt.title("Training Returns")
-    
-    plt.tight_layout()
-    plt.savefig(f"{save_dir}/training_results_{save_count}.png")
-    plt.close()  # Close the figure to free memory
 
 if __name__ == "__main__":
     print(gc.isenabled())
-    # Create save directory
-    save_dir = "./poker_nfsp_models"
+    
+    # Create save directory (hard-coded)
+    save_dir = "/home/ethanso/CS175/nfsp_1v1_models_adam/run_17"
     os.makedirs(save_dir, exist_ok=True)
     
     session = tf.Session()
     session.__enter__()  # Make the session active
+    
+    env = CustomPokerEnv({
+        "betting": "limit",
+        "numPlayers": 2,
+        "numRounds": 2,
+        "blind": "2 4",
+        "raiseSize": "4 8",
+        "firstPlayer": "1 1",
+        "maxRaises": "2 2",
+        "numSuits": 2,
+        "numRanks": 5,
+        "numHoleCards": 1,
+        "numBoardCards": "0 2",
+        "stack": "20 20"
+    })
 
-    env = rl_environment.Environment(
-        "universal_poker", 
-        {"numPlayers": 2,
-        "stack": "2000 2000",
-        "blind": "50 50",
-        "numRanks": 13,
-        "numHoleCards": 2,
-        "numBoardCards": "0 3 1 1",
-        "numRounds": 4,
-        "bettingAbstraction": "fullgame"}
-    )
-    num_players = env.num_players
+    num_players = 2
     
     agent_configs = {
-        "hidden_layers_sizes": [128, 128],        # 
-        "reservoir_buffer_capacity": int(5e5),    # 
-        "anticipatory_param": 0.1,                # Probability of using best response
-        "batch_size": 256,                        # Larger batch size
-        "rl_learning_rate": 0.001,                # 
-        "sl_learning_rate": 0.001,                # 
-        "min_buffer_size_to_learn": 10000,        # Wait for more experience before learning
-        "learn_every": 64,                        # Learn frequency
-        "optimizer_str": "adam",                  # Adam optimizer
+        "hidden_layers_sizes": [256, 256],        
+        "reservoir_buffer_capacity": int(1e6),    
+        "anticipatory_param": 0.1,
+        "batch_size": 256,
+        "rl_learning_rate": 0.01,
+        "sl_learning_rate": 0.01,
+        "min_buffer_size_to_learn": 10000,
+        "learn_every": 64,
+        "optimizer_str": "adam",
         
         # parameters for DQN
-        "replay_buffer_capacity": int(5e5),       # Experience replay capacity
-        "epsilon_start": 0.06,                    # Starting exploration rate
-        "epsilon_end": 0.001,                     # Final exploration rate
+        "replay_buffer_capacity": int(1e6),
+        "epsilon_start": 1.0,
+        "epsilon_end": 0.01,
     }
     
     # Initialize agents
@@ -208,15 +142,19 @@ if __name__ == "__main__":
     session.run(tf.global_variables_initializer())
 
     # Training parameters
-    num_episodes = 1000000
+    num_episodes = 400000
     eval_every = 10000
-    save_every = 100000
+    save_every = 50000
     
     returns = []
-    eval_returns = []
     win_rates = []
-
-    save_count = 0
+    rl_losses_0 = []
+    sl_losses_0 = []
+    rl_losses_1 = []
+    sl_losses_1 = []
+    episode_numbers_0 = []
+    episode_numbers_1 = []
+    
 
     start_time = time.time()
     for episode in range(num_episodes):
@@ -244,71 +182,91 @@ if __name__ == "__main__":
             elapsed_time = round(time.time() - start_time, 2)
             minutes = int(elapsed_time // 60)
             seconds = int(elapsed_time % 60)
+
+            for agent in agents:
+                sl_loss, rl_loss = agent.loss
+                if agent.player_id == 0:
+                    if sl_loss is not None:
+                        sl_losses_0.append(sl_loss)
+                        rl_losses_0.append(rl_loss)
+                        episode_numbers_0.append(episode)
+                    else:
+                        rl_losses_0.append(rl_loss)
+                else:
+                    if sl_loss is not None:
+                        sl_losses_1.append(sl_loss)
+                        rl_losses_1.append(rl_loss)
+                        episode_numbers_1.append(episode)
+                    else:
+                        rl_losses_1.append(rl_loss)
+                
             
             win_rate_p0, win_rate_p1 = evaluate_against_random_bots(env, agents)
             win_rates.append((win_rate_p0, win_rate_p1))
 
-            print()
-            print(f"-------------------- Episode #{episode} --------------------", flush=True)
-            print(f"Win rate as P0 against random bots: {win_rate_p0:.3f}", flush=True)
-            print(f"Win rate as P1 against random bots: {win_rate_p1:.3f}", flush=True)
-            print(f"Average return over last {eval_every} episodes: {np.mean(returns[-eval_every:], axis=0)}", flush=True)
-            print(f"Time elapsed: {minutes} mins and {seconds:02d} secs", flush=True)
-            print(f"------------------------------------------------------")
-            print()
-            
-            # Save returns to disk
-            np.save(f"{save_dir}/returns_{episode}.npy", np.array(returns))
-            # Clear the list to free memory
-            returns = []
+            log_message = f"""
+-------------------- Episode #{episode} --------------------
+Win rate as P0 against random bots: {win_rate_p0:.3f}
+Win rate as P0 against random bots: {win_rate_p1:.3f}
+Average return over last {eval_every} episodes: {np.mean(returns[-eval_every:], axis=0)}
+Time elapsed: {minutes} mins and {seconds:02d} secs
+------------------------------------------------------
+"""
+            write_to_log(save_dir, log_message)
             
         
-        # Plot data periodically
+        # Save agent
         if episode % save_every == 0 and episode > 0:
-            save_count += 1
-            # Load all returns data
-            plot_returns_from_files(save_dir, episode, returns, save_count, window_size=1000)
-            # Plot results
-            # plt.figure(figsize=(12, 5))
-            # plt.subplot(1, 2, 1)
-            # returns_p0 = [r[0] for r in returns]
-            # returns_p1 = [r[1] for r in returns]
-            # plt.plot(np.convolve(returns_p0, np.ones(1000)/1000, mode='valid'), label='Player 0')
-            # plt.plot(np.convolve(returns_p1, np.ones(1000)/1000, mode='valid'), label='Player 1')
-            # plt.xlabel("Episodes")
-            # plt.ylabel("Average Return (Moving Avg)")
-            # plt.legend()
-            # plt.title("Training Returns")
+            elapsed_time = round(time.time() - start_time, 2)
+            minutes = int(elapsed_time // 60)
+            seconds = int(elapsed_time % 60)
             
-            # plt.tight_layout()
-            # plt.savefig(f"{save_dir}/training_results_{save_count}.png")
-    
+            save_agents(agents, save_dir, episode)
    
-    # Plot results
-    plt.figure(figsize=(12, 5))
-    
-    plt.subplot(1, 2, 1)
+    # Final save
+    save_agents(agents, save_dir, num_episodes)
 
+    # Plot results
+    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+    # plot win-rate against uniform random policy
     min_len = min(len(np.arange(0, num_episodes, eval_every)), len(win_rates))
     x_values = np.arange(0, num_episodes, eval_every)[:min_len]
-    win_rates_truncated = win_rates[:min_len]
-    plt.plot(x_values, [wr[0] for wr in win_rates_truncated], label='Player 0')
-    plt.plot(x_values, [wr[1] for wr in win_rates_truncated], label='Player 1')
+    win_rates_truncated = win_rates[:min_len] 
+    axes[0, 0].plot(x_values, [wr[0] for wr in win_rates_truncated], label='Player 0')
+    axes[0, 0].plot(x_values, [wr[1] for wr in win_rates_truncated], label='Player 1')
+    axes[0, 0].set_xlabel("Episodes")
+    axes[0, 0].set_ylabel("Win Rate vs Random")
+    axes[0, 0].legend()
+    axes[0, 0].set_title("Win Rate Against Random Bot")
+   
+    # plot average return of the agent (payoff per episode)
+    returns_p0 = [r[0] for r in returns] 
+    returns_p1 = [r[1] for r in returns] 
+    axes[0, 1].plot(np.convolve(returns_p0, np.ones(1000)/1000, mode='valid'), label='Player 0')
+    axes[0, 1].plot(np.convolve(returns_p1, np.ones(1000)/1000, mode='valid'), label='Player 1')
+    axes[0, 1].set_xlabel("Episodes")
+    axes[0, 1].set_ylabel("Average Return (Moving Avg)")
+    axes[0, 1].legend()
+    axes[0, 1].set_title("Training Returns")
 
-    plt.xlabel("Episodes")
-    plt.ylabel("Win Rate vs Random")
-    plt.legend()
-    plt.title("Win Rate Against Random Bot")
-    
-    plt.subplot(1, 2, 2)
-    returns_p0 = [r[0] for r in returns]
-    returns_p1 = [r[1] for r in returns]
-    plt.plot(np.convolve(returns_p0, np.ones(1000)/1000, mode='valid'), label='Player 0')
-    plt.plot(np.convolve(returns_p1, np.ones(1000)/1000, mode='valid'), label='Player 1')
-    plt.xlabel("Episodes")
-    plt.ylabel("Average Return (Moving Avg)")
-    plt.legend()
-    plt.title("Training Returns")
+    # plot reinforcement learning loss
+    rl_losses_0_truncated = rl_losses_0[:min_len]
+    rl_losses_1_truncated = rl_losses_1[:min_len]
+    axes[1, 0].plot(x_values, rl_losses_0_truncated, label='Player 0')
+    axes[1, 0].plot(x_values, rl_losses_1_truncated, label='Player 1')
+    axes[1, 0].set_xlabel("Episodes")
+    axes[1, 0].set_ylabel("RL Loss")
+    axes[1, 0].legend()
+    axes[1, 0].set_title("Loss in RL Portion")
+
+    # plot supervised learning loss 
+    axes[1, 1].plot(episode_numbers_0, sl_losses_0, label='Player 0')
+    axes[1, 1].plot(episode_numbers_1, sl_losses_1, label='Player 1')
+    axes[1, 1].set_xlabel("Episodes")
+    axes[1, 1].set_ylabel("SL Loss")
+    axes[1, 1].legend()
+    axes[1, 1].set_title("Loss in SL Portion")
     
     plt.tight_layout()
     plt.savefig(f"{save_dir}/training_results_final.png")
