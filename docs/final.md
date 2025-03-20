@@ -175,7 +175,7 @@ To evaluate if our goal of making an agent that can beat a random agent more tha
 
 <img src="https://github.com/whygukin/Group-9/blob/main/docs/nfsp_random.png" alt="Alt Text" width="300" height="300"> <img src="https://github.com/whygukin/Group-9/blob/main/docs/ppo_random.png" alt="Alt Text" width="300" height="300"> <img src="https://github.com/whygukin/Group-9/blob/main/docs/cfr_random.png" alt="Alt Text" width="300" height="300">
 
-TODO: explain findings
+All three algorithms were able to train a model that beats the random agent at least 50% of the games it played. These graphs show the win-rate as a function of iterations, where each iteration is 1000 games played between the two agents. PPO was able to beat the random agent just about more than half the games it played, with a win-rate hovering around the 51%-53%. NFSP was able to win at least 60% of its games every iteration, showing that it is very strong against the random agent compared to PPO. However, CFR+ has a slight edge on NFSP versus the random agent, with an average win-rate of about 65%. We believe that NFSP and CFR+ performed better against the random agent because PPO is an algorithm that attempts to exploit past rewarding strategies, but against a random agent, it will not be reliably learning a strategy that is able to beat the random agent every time. 
 
 We also wanted to see which algorithm would perform the best when pitted against each other, as this would give insight into which algorithm would be a better choice should want to train for a larger-scale game. We observed the performance of each algorithm against each other over 10,000 games. 
 
