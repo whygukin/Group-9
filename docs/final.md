@@ -65,48 +65,34 @@ The algorithm itself ran with these parameters:
 
 Some of these parameters were created by the person who made the base PPO algorithm (which was modified later). The 4800 max timesteps per batch, 1600 max timesteps per episode were from the original code. Clipping, gamma, learning rate, entropy were all changed afterwards by playing around with the results of the algorithm.
 
-Another algorithm we evaluated was the CFR algorithm. Our code evaluates a poker game solver using different variants of Counterfactual Regret Minimization (CFR) algorithms. It defines a custom limited hold'em poker game with specific parameters including 2 players, 1 betting round, defined blinds and raise sizes, and card distributions. The program allows users to choose between three CFR solver variants: standard CFR, CFR+ (an improved version), or CFR-BR (with best response). During execution, the solver runs through half the specified iterations, evaluating and printing the exploitability after each one to track how close the strategy is to optimal. The trained solver is then saved to a pickle file, loaded back, and its exploitability is verified to ensure proper persistence. The code then continues training for the remaining iterations using the loaded solver, printing both the tabular policy length and ongoing exploitability measurements. This implementation uses OpenSpiel framework to approximate a Nash equilibrium strategy for the defined poker game, where neither player could improve their expected value by changing their strategy.
+Another algorithm that we explored was CFR (Counterfactual Regret Minimization). Based on our study of various research papers, the three main variants of CFR that are applied to poker are 1. CFR-BR (CFR Best Response) 2. Vanilla CFR 3. CFR+. All of these are iterative algorithms for approximating a Nash equilibrium in multi-player zero-sum games. On each iteration, the algorithm traverses the entire game tree. It computes, for each information set (the decision point for a player when they only know what cards they hold and the betting history), a set of counterfactual values that measure how good each action would have been if we had reached that state more often. CFR calculates regret for not having played each action in each state. If an action would have led to a better outcome than the action actually taken in the current strategy, the regret for not taking that action goes up. If it wouldn’t have helped, the regret does not increase. After computing regrets, CFR updates each decision’s policy (the probability distribution over actions) in proportion to the positive regrets. Actions that have accumulated more regret in the past have a higher probability of being chosen in future iterations. Although CFR updates a current policy each iteration, the final (or running average) strategy across all iterations converges to a Nash equilibrium (in two-player zero-sum games).
 
 
-Our game is defined in the following way:
-```
-CUSTOM_LIMIT_HOLDEM_ACPC_GAMEDEF = """
-GAMEDEF
-limit
-numPlayers = 2
-numRounds = 2
-blind = 2 4
-raiseSize = 4 8
-firstPlayer = 1
-maxRaises = 2 2
-numSuits = 2
-numRanks = 5
-numHoleCards = 1
-numBoardCards = 0 2
-stack = 20
-END GAMEDEF
-"""
-```
+CFR-BR (CFR + Best Response) typically replaces only one player’s CFR update with a best-response calculation (an exploitative strategy) to either measure exploitability. So, only one side does CFR updates while the other tries to exploit the current strategy. Meanwhile, CFR+ is an enhanced version of CFR that modifies how regrets are accumulated—specifically by “clipping” them to never fall below zero—and often uses an alternating update scheme between players, enabling much faster convergence in practice compared to standard CFR.
 
-This is a small, custom, 2-player “limit hold’em”-style game. It is a simplified version of the Texas Hold’em game (which uses 2 hole cards, 5 community cards in multiple rounds, etc.). numHoleCards = 1 means each player gets just 1 hole card, and numBoardCards = 0 2 1 indicates the dealing of 3 total board cards in stages. The Universal Poker engine in OpenSpiel can parse ACPC game definitions, so any game configuration we provide in ACPC format (including Texas Hold’em) can be loaded here.
-
-Specifically, we compare a tradtional CFR algorithm with a CFR+ algorithm (an improved version that tends to converge faster), and CFR-BR algorithm. All of these are iterative algorithms for approximating a Nash equilibrium in multi-player zero-sum games. Each call to evaluate_and_update_policy() performs one iteration of the CFR algorithm.
-exploitability(game, solver.average_policy()) measures how close (in terms of expected payoff) the current average policy is to a true Nash equilibrium. The lower the exploitability, the better.
+During execution, the solver runs through half the specified iterations, evaluating and printing the exploitability after each one to track how close the strategy is to optimal. The trained solver is then saved to a pickle file, loaded back, and its exploitability is verified to ensure proper persistence. The code then continues training for the remaining iterations using the loaded solver, printing both the tabular policy length and ongoing exploitability measurements. Every 20 iterations, the algorithm plays against a random agent and updates its policy accordingly. There are 200 iterations total. Each call to evaluate_and_update_policy() performs one iteration of the CFR algorithm. exploitability(game, solver.average_policy()) measures how close (in terms of expected payoff) the current average policy is to a true Nash equilibrium. The lower the exploitability, the better.
 
 
-Specifically, the CFR algorithm can be defined by the following equation:
+The algorithm is detailed mathematically as follows:
+
 
 ![ImageTest](cfr-algo.png)
 
+
 For each action a∈A(I), it defines the (instantaneous) counterfactual regret at iteration t by looking at all histories h belonging to information set I, weighting each history by the probability that the other players’ actions led to h, and comparing the utility if you force action a in I versus the utility under the current strategy.
+
 
 It accumulates this regret across iterations, and resets to 0 if it ever becomes negative.
 
+
 ![ImageTest](cfralgo2.png)
+
 
 Finally, it uses these positive regrets to define the policy at iteration t+1. For each information set I and action a∈A(I)a.
 
+
 ![ImageTest](cfralgo3.png)
+
 
 Thus, the probability of choosing action a is proportional to the accumulated positive regret for a.
 
