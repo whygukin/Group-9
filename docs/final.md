@@ -62,23 +62,24 @@ Another algorithm we evaluated was the CFR algorithm. Our code evaluates a poker
 
 
 Our game is defined in the following way:
-CUSTOM_LIMIT_HOLDEM_ACPC_GAMEDEF = """\
+```
+CUSTOM_LIMIT_HOLDEM_ACPC_GAMEDEF = """
 GAMEDEF
 limit
 numPlayers = 2
-numRounds = 1
+numRounds = 2
 blind = 2 4
-raiseSize = 4 4 8
+raiseSize = 4 8
 firstPlayer = 1
-maxRaises = 2 2 2
+maxRaises = 2 2
 numSuits = 2
 numRanks = 5
 numHoleCards = 1
-numBoardCards = 0 2 1
+numBoardCards = 0 2
 stack = 20
 END GAMEDEF
 """
-
+```
 
 This is a small, custom, 2-player “limit hold’em”-style game. It is a simplified version of the Texas Hold’em game (which uses 2 hole cards, 5 community cards in multiple rounds, etc.). numHoleCards = 1 means each player gets just 1 hole card, and numBoardCards = 0 2 1 indicates the dealing of 3 total board cards in stages. The Universal Poker engine in OpenSpiel can parse ACPC game definitions, so any game configuration we provide in ACPC format (including Texas Hold’em) can be loaded here.
 
