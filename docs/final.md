@@ -134,7 +134,7 @@ Here, the PPO algorithm in 1 million timesteps seems to have difficulty at gaini
 The graph illustrating the average win rate in 100 games per iteration seemed to perform better than anticipated. It averages around higher than a 50% win rate. This is due to the agent likely trained against a random agent, so it is likely that the PPO agent performed better (higher than 50%).
 
 
-When it came to evaluating the 3 variants of CFR algorithms, we found the following, tgraphs plotting exploitability for the three algorithms looked like the following:
+When it came to evaluating the 3 variants of CFR algorithms, we found the following (graphs plotting exploitability for the three algorithms):
 
 
 ![ImageTest](cfr-graph.png)
