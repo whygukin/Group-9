@@ -22,7 +22,28 @@ Finding solutions for incomplete information games presents nontrivial challenge
 
 
 ## Approach
-One of the aforementioned approaches we are taking to tackle the project is by using the PPO (Proximal Policy Optimization) algorithm created and developed by OpenAI. A variation of the actor-critic model, which helps the agent make better decisions based on the critic neural-network which influences the actor (which decisions to make) or vice versa. The PPO algorithm also aims to reduce the surrogate loss function found in the policy in order to maxmize the rewards from the user. PPO has a lost function that looks like this:
+As mentioned above our goal was to implement PPO, NFSP, and CFR as potential agents to solve poker games. In our project, we used PPO as a baseline approach where it does not handle imperfect information in multi-agent games well, but it can work. We then compare it to other more sophisticated algorithms meant for imperfect information games such as NFSP and CFR. 
+
+Our original approach was to implement PPO, NFSP, and CFR (and its variants) algorithms in a game of No-limit Texas Hold’em (NLTHE), but we realized that NLTHE was a very large game given our current memory and time constraints. So we landed on a definition of poker that is an abstraction of Limit Texas Hold’em (LTHE). We used Openspiel’s universal_poker game environment to train and evaluate our agents. The game is implemented so that we can use our own custom definitions of poker to train our agents. For this project, our custom game definition is as follows: 
+
+{'betting': 'limit', 'bettingAbstraction': 'fcpa', 'blind': '2 4', 'boardCards': '', 'firstPlayer': '1 1', 'handReaches': '', 'maxRaises': '2 2', 'numBoardCards': '0 2', 'numHoleCards': 1, 'numPlayers': 2, 'numRanks': 5, 'numRounds': 2, 'numSuits': 2, 'potSize': 0, 'raiseSize': '4 8', 'stack': '20 20'}
+
+Just to explain a few of the differences between normal Texas Hold’em and our game definitions: 
+
+Limit betting: limits the amount of bets a player can make, as opposed to no-limit, which allows a player to raise any amount of chips at any point in the game. 
+
+FCPA abstraction: when training, we abstracted the game so that agents were limited to 5 actions: fold, call, raise the bet by the amount in the pot, and all-in.
+
+2 players: also known as heads-up, this reduces the amount of information that is incomplete by a considerably large amount. 
+2 rounds of betting, 1 hole card & 2 board cards: traditionally, each player would get 2 hole cards, and there would be 4 rounds of betting with 5 total board cards revealed. To reduce the amount of information that is incomplete once again, we halve the number of hole cards a player has, and only have 2 community cards, so the goal of the game is to try to have the highest 3-card hand. 
+
+5 ranks and 2 suits: in a normal deck of cards, there are 13 different ranks (2-10, jacks, queens, kings, and aces) and 4 suits (clubs, diamonds, hearts and spades); however, to simplify the game we lowered it to 5 ranks and 2 suits. 
+
+The advantage of changing the game definition is that it allows us to run the algorithms in a reasonable amount of time, whereas even a classic game of No-Limit Texas Hold’Em would potentially take days or weeks to finish learning. This combined with the constant HPC3 limit usages and outages made it almost impossible to do it on the full game. So our only other reasonable approach was to alternate/change the game so that it is smaller and easier to run on given the short period of time we had.
+
+We used Open Spiel’s Python implementations of NFSP and CFR (and CFR+) to train our agents. We leveraged OpenAI’s Python implementation of PPO to train a third agent. Once they were done training, we saved the average policy of these agents and loaded them later when we wanted to evaluate their performance. 
+
+One of the aforementioned approaches we are taking to tackle the project is by using the PPO algorithm created and developed by OpenAI. A variation of the actor-critic model, which helps the agent make better decisions based on the critic which influences the actor (which decisions to make) or vice versa. The PPO algorithm also aims to reduce the surrogate loss function found in the policy in order to maximize the rewards from the user. PPO has a lost function that looks like this:
 
 $$
 L(s,a, \theta_k, \theta) = \min \left( \frac{\pi_{\theta}(a|s)}{\pi_{\theta_k}(a|s)} A^{\pi_{\theta_k}}(s,a), \ g(\epsilon, A^{\pi_{\theta_k}}(s,a)) \right),
@@ -38,32 +59,9 @@ g(\epsilon, A) =
 \end{cases}
 $$
 
-Basically finding the ratio of the policies multiplied by their advantage to see how it performs. Then, the algorithm compares it with the lower bound / upper bound changes the algorithm can perform. This makes it so the PPO algorithm cannot have a loss that is bigger / less than the desired amount (usually a small amount). This makes updating the policy incrementally small potentially taking longer to converge and or find a solution. However, it makes the algorithm much more stable in the long run.
 
-This algorithm works well in Poker Reinforcement Learning because of its slow updating policies making it a stable algorithm. But also, it is capable of learning in partially observable environments.
+Basically finding the ratio of the policies multiplied by their advantage to see how it performs. Then, the algorithm compares it with the lower bound / upper bound changes the algorithm can perform. This makes it so the PPO algorithm cannot have a loss that is bigger / less than the desired amount (usually a small amount). This makes updating the policy incrementally small, potentially taking longer to converge and or find a solution. However, it makes the algorithm much more stable in the long run. This algorithm works in Poker Reinforcement Learning because the policy changes are minimal despite the big differences in changes in observation after each action. However, this algorithm does not perform well in partially observable environments since PPO needs states and actions to be consistent and less random. This makes it so PPO can converge to a policy that nets it the highest reward. However, when there is partially observable and imperfect information that adds noise to the algorithm causing it to have a difficult time making the best policy. But for perfectly observable environments, PPO should be able to create the most optimal policy over many iterations.
 
-The PPO algorithm was paired with the open-spiel environment that our TA recommended us for playing card games. The open-spiel environment also developed in part with google deepmind, contains universal poker which is a poker-like environment with adjustable parameters to reflect different variations of poker. For the PPO algorithm, we set the configurations as follows (similar to Texas Hold'em):
-
-- Each player starts with 2000 chips
-- 5 players total (1 as the designated agent to learn on PPO, 4 as complete random action agents)
-- Each player inital bets are 50 chips
-- 52 total cards in the deck (all 4 suits, 13 cards in each suit)
-- 3 flipped cards in the beginning, 1 more each after. Maxes at 5. (as players continue to bet)
-- Maxmium number total betting rounds cap at 4.
-
-To learn more about how to play poker: https://bicyclecards.com/how-to-play/texas-holdem-poker.
-
-The algorithm itself ran with these parameters:
-
-- 1500000 timesteps
-- 1600 max timesteps per episode
-- 4800 timesteps per batch
-- entropy coeffecient at 0.05
-- clipping at 0.2
-- gamma at 0.99
-- learning rate at 0.001
-
-Some of these parameters were created by the person who made the base PPO algorithm (which was modified later). The 4800 max timesteps per batch, 1600 max timesteps per episode were from the original code. Clipping, gamma, learning rate, entropy were all changed afterwards by playing around with the results of the algorithm.
 
 Another algorithm that we explored was CFR (Counterfactual Regret Minimization). Based on our study of various research papers, the three main variants of CFR that are applied to poker are 1. CFR-BR (CFR Best Response) 2. Vanilla CFR 3. CFR+. All of these are iterative algorithms for approximating a Nash equilibrium in multi-player zero-sum games. On each iteration, the algorithm traverses the entire game tree. It computes, for each information set (the decision point for a player when they only know what cards they hold and the betting history), a set of counterfactual values that measure how good each action would have been if we had reached that state more often. CFR calculates regret for not having played each action in each state. If an action would have led to a better outcome than the action actually taken in the current strategy, the regret for not taking that action goes up. If it wouldn’t have helped, the regret does not increase. After computing regrets, CFR updates each decision’s policy (the probability distribution over actions) in proportion to the positive regrets. Actions that have accumulated more regret in the past have a higher probability of being chosen in future iterations. Although CFR updates a current policy each iteration, the final (or running average) strategy across all iterations converges to a Nash equilibrium (in two-player zero-sum games).
 
