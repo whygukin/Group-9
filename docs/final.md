@@ -185,19 +185,23 @@ Broadly, CFR+ excels at finding near-equilibrium strategies in Limit Texas Hold�
 
 To evaluate our agent trained by NFSP, we looked at its win-rate against a random bot and the average return it had every 10000 episodes. We trained for a total of 400,000 episodes. 
 
-<img src="https://github.com/whygukin/Group-9/blob/main/docs/nfsp_training.png" alt="Alt Text" width="3000" height="350">
+![ImageTest](nfsp_training.png)
 
 Our results show that because we train the agent as going first in the game, when the NFSP agents play against a random agent, the NFSP agent that goes first (Player 1) performs much better than the one that goes second (Player 0). This is reflected in both the win-rate and average return (or payoff) that the agents got as they won or lost games. This is the agent that we used for the following evaluations. 
 
 To evaluate if our goal of making an agent that can beat a random agent more than 50% of the time, we ran 10 intervals of 1000 games of the trained models vs a random agent in our custom definition of Limit Texas Hold'em. 
 
-<img src="https://github.com/whygukin/Group-9/blob/main/docs/nfsp_random.png" alt="Alt Text" width="300" height="300"> <img src="https://github.com/whygukin/Group-9/blob/main/docs/ppo_random.png" alt="Alt Text" width="300" height="300"> <img src="https://github.com/whygukin/Group-9/blob/main/docs/cfr_random.png" alt="Alt Text" width="300" height="300">
+![ImageTest](nfsp_random.png)
+![ImageTest](ppo_random.png)
+![ImageTest](cfr_random.png)
 
 All three algorithms were able to train a model that beats the random agent at least 50% of the games it played. These graphs show the win-rate as a function of iterations, where each iteration is 1000 games played between the two agents. PPO was able to beat the random agent just about more than half the games it played, with a win-rate hovering around the 51%-53%. NFSP was able to win at least 60% of its games every iteration, showing that it is very strong against the random agent compared to PPO. However, CFR+ has a slight edge on NFSP versus the random agent, with an average win-rate of about 65%. We believe that NFSP and CFR+ performed better against the random agent because PPO is an algorithm that attempts to exploit past rewarding strategies, but against a random agent, it will not be reliably learning a strategy that is able to beat the random agent every time. 
 
 We also wanted to see which algorithm would perform the best when pitted against each other, as this would give insight into which algorithm would be a better choice should want to train for a larger-scale game. We observed the performance of each algorithm against each other over 10,000 games. 
 
-<img src="https://github.com/whygukin/Group-9/blob/main/docs/nfsp_ppo.png" alt="Alt Text" width="300" height="300"> <img src="https://github.com/whygukin/Group-9/blob/main/docs/ppo_cfr.png" alt="Alt Text" width="300" height="300"> <img src="https://github.com/whygukin/Group-9/blob/main/docs/cfr_nfsp.png" alt="Alt Text" width="300" height="300">
+![ImageTest](nfsp_ppo.png)
+![ImageTest](ppo_cfr.png)
+![ImageTest](cfr_nfsp.png)
 
 In the first chart, both NFSP and PPO hover near the 50% win‐rate mark over the 10 iterations, with NFSP ending slightly higher on average. Quantitatively, the difference is only a few percentage points, reflecting that both methods are general‐purpose RL algorithms capable of learning reasonable strategies. Qualitatively, NFSP’s ability to maintain an approximate average strategy (via its supervised learning component) helps it adapt more consistently in a multi‐agent, partially observed environment. By contrast, PPO’s on‐policy updates can lead to more volatile performance in poker, so it lags just behind NFSP over these iterations.
 
@@ -234,9 +238,7 @@ Deep Reinforcement Learning from Self-Play in No-Limit Texas Hold’em Poker (Ti
 ADAM Optimizer
 https://blog.marketmuse.com/glossary/adaptive-moment-estimation-adam-definition/ 
 
-
 ## AI Tool Usage
-AI (ChatGPT) was used to help make changes in the PPO algorithm (in the codebase above), 1) helping change the PPO algorithm handle continuous to discrete inputs/outputs. 2) Alter it so that it is able to add some sort of exploration within the PPO algorithm using entropy.
 
 AI was used in the creation of a wrapper to wrap around an NFSP agent in order to procure its average policy to use in Open Spiel. These would be the classes NFSPPolicy(policy.Policy) in the evaluation code where NFSP is being used. It was also used to create a wrapper for PPO models loaded using stable-baselines, which would be the class PPOPolicy in the evaluation code where PPO is being used. 
 
