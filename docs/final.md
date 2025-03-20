@@ -196,9 +196,6 @@ We used OpenSpiel's universal_poker implementation as a starting point for our c
 Helped with understanding a bit about the PPO algorithm (along with the lecture slides).
 https://medium.com/analytics-vidhya/coding-ppo-from-scratch-with-pytorch-part-1-4-613dfc1b14c8
 
-The PPO algorithm used based on the article above, but with some minor tweaks/changes.
-https://github.com/ericyangyu/PPO-for-Beginners/blob/master/ppo.py  (repository - PPO for beginners)
-
 PPO algorithm such as all the math from Open AI (developers themselves)
 https://spinningup.openai.com/en/latest/algorithms/ppo.html 
 
