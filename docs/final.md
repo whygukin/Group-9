@@ -121,17 +121,17 @@ and these were all passed to the python implementation of the NFSP algorithm tha
  
 
 ## Evaluation
+As mentioned in the project summary, metrics that were used to measure the performance of each agent were win rates (against random agents / against each other), exploitability, and chip winnings.
 
-The results of the PPO algorithm is limited to 1500000 timesteps and the environment and the results may not reflect actual poker gameplay.
+As for the PPO algorithm, the agent was trained against a random agent (an agent that does random actions). 
 
-![ImageTest](ppo_actor_loss.png)
-![ImageTest](ppo_episodic_reward.png)
+![ImageTest](ppo_timesteps.png)
 
+Here, the PPO algorithm in 1 million timesteps seems to have difficulty at gaining more rewards as more episodes/timesteps go by. This is due to the nature of the PPO algorithm having a difficult time converging to an optimal policy since poker is a partially observable game. Partially observable makes the PPO algorithm change its prediction making it unstable in the long term. On the other hand, the PPO algorithm seemed to perform better than expected partially due to the smaller version of the poker game that we decided to test on.
 
-The results of the graph that was generated from the performance of the agent using the PPO algorithm can be seen above. While the graph is hard to read, there is a clear trend in performance in average episodic return being higher as more iterations are performed while playing Texas hold em. The return seems to be steadily increasing (the reward / # of chips average gained per episode vs iteration). At around 30 iterations to 130 iterations, there seems to be some stagnation in terms of episodic reward growth. A possibility for that is due to the AI agent finding difficulty in trying to find other optimal strategies besides folding, thus leading to a -50 (which is the initial amount bet) and instantly folding. To combat this, we decided to add a way for the agent to explore a little bit to find other optimal strategies besides folding. After the stagnation in the initial episodic returns, there seems to be another gain all the way to touching 400 chips in one episode. Thus showing potential growth from the AI agent itself.
+![ImageTest](ppo_win.png)
 
-Another metric that was analyzed closely was the average actor loss. In order for the algorithm to be “stable”, we want the “surrogate loss function” to stabilize and or having a small error. This shows that the algorithm is likely to be converging which can be shown in the graph above. Stablizing at around -0.2 actor loss then exploring new strategies caused the AI agent to stabilize at a new -0.10 range of actor loss. This means that the PPO algorithm is likely to be improving over the iterations, while making small incremental changes to its policy. 
-
+The graph illustrating the average win rate in 100 games per iteration seemed to perform better than anticipated. It averages around higher than a 50% win rate. This is due to the agent likely trained against a random agent, so it is likely that the PPO agent performed better (higher than 50%).
 
 
 When it came to evaluating the 3 variants of CFR algorithms, we found the following, tgraphs plotting exploitability for the three algorithms looked like the following:
