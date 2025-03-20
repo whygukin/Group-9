@@ -102,28 +102,27 @@ Finally, it uses these positive regrets to define the policy at iteration t+1. F
 Thus, the probability of choosing action a is proportional to the accumulated positive regret for a.
 
 
-Another algorithm we explored was Neural Fictitious Self-Play, using DQN as the inner-RL algorithm. As Johannes Heinrich and David Silver describes it in their paper "Deep Reinforcement Learning from Self-Play in Imperfect-Information Games", "NFSP combines FSP with neural network function approximation...  all players of the game are controlled by separate NFSP agents that learn from simultaneous play against each other, i.e. self-play. An NFSP agent interacts with its fellow agents and memorizes its experience of game transitions and its own best response behaviour in two memories," and "treats these memories as two distinct datasets suitable for deep reinforcement learning and supervised classification respectively." (Heinrich and Silver) The agent trains a neural network to predict action values using DQN, resulting in a network that represents the agent's approximate best response strategy, which selects a random action with probability and otherwise chooses the action that maximizes the predicted action values. 
+Another algorithm we explored was Neural Fictitious Self-Play, using DQN as the inner-RL algorithm. As Johannes Heinrich and David Silver describes it in their paper "Deep Reinforcement Learning from Self-Play in Imperfect-Information Games", "NFSP combines FSP with neural network function approximation...  all players of the game are controlled by separate NFSP agents that learn from simultaneous play against each other, i.e. self-play. An NFSP agent interacts with its fellow agents and memorizes its experience of game transitions and its own best response behaviour in two memories," and "treats these memories as two distinct datasets suitable for deep reinforcement learning and supervised classification respectively." (Heinrich and Silver) The agent trains a neural network to predict action values using DQN, resulting in a network that represents the agent's average strategy, which selects a random action with probability and otherwise chooses the action that maximizes the predicted action values. 
 
-The agents were configured to have the following parameters: 
+After testing and tuning different hyperparameters, NFSP agents were configured to have the following: 
 ```
         agent_configs = {
-                "hidden_layers_sizes": [256, 256], 
-                "reservoir_buffer_capacity": int(2e6),
+                "hidden_layers_sizes": [256, 256],        
+                "reservoir_buffer_capacity": int(1e6),    
                 "anticipatory_param": 0.1,
                 "batch_size": 256,
-                "rl_learning_rate": 0.001,
-                "sl_learning_rate": 0.001,
+                "rl_learning_rate": 0.01,
+                "sl_learning_rate": 0.01,
                 "min_buffer_size_to_learn": 10000,
                 "learn_every": 64,
-                "optimizer_str": "adam",
+                "optimizer_str": "adam",                  # Adam optimizer
                 
-                # parameters for DQN
-                "replay_buffer_capacity": int(2e6),
-                "epsilon_start": 0.06,
-                "epsilon_end": 0.001,
-        }
+                "replay_buffer_capacity": int(1e6),      
+                "epsilon_start": 1.0,
+                "epsilon_end": 0.01,
+            }
 ```
-and these were all passed to the python implementation of the NFSP algorithm that OpenSpiel has available. Loss is minimized by stochastic gradient descent updates on the neural networks that are trying to approximate best responses and average strategies. 
+and these were all passed to the python implementation of the NFSP algorithm that OpenSpiel has available. Loss is minimized by Adaptive Moment Estimation (ADAM) on the neural networks that are trying to approximate best responses and average strategies. ADAM is two stochastic gradient descent approaches, Adaptive Gradients and Root Mean Square Propagation combined to calculate a stochastic approximation using randomly selected data subset as opposed to the entire data set (https://blog.marketmuse.com/glossary/adaptive-moment-estimation-adam-definition/). 
  
 
 ## Evaluation
